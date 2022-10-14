@@ -9,4 +9,4 @@ Code and data for the paper "Not another Negation Benchmark: The NaN-NLI Test Su
 
 	nli_infer.py -i data/nan.csv -m <model_name_or_path>
 
-`model_name_or_path` in `roberta-base, joey234/cuenb, joey234/cuenb-mnli, sileod/roberta-base-mnli`  
+`model_name_or_path` in `joey234/cuenb-mnli, sileod/roberta-base-mnli, joey234/cuenb-mnli-negnli, joey234/roberta-base-mnli-negnli`  
