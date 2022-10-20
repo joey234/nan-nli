@@ -23,27 +23,23 @@ def read_input(input_file):
 	df  = pd.read_csv(input_file)
 	sentence1 = list(df['premise'])
 	sentence2 = list(df['hypothesis'])
-	labels = list(df['final-label'])
+	labels = list(df['label'])
 	return df,sentence1, sentence2, labels
 
 def construct_input(model, sentence1, sentence2):
 	# print(sentence1, sentence2)
-	if 'roberta' in model:
-		return construct_input_roberta(sentence1,sentence2)
-	elif 'deberta' in model:
+	if 'deberta' in model:
 		return construct_input_deberta(sentence1, sentence2)	
 	else:
-		# return construct_input_roberta(sentence1,sentence2)
-		return construct_input_deberta(sentence1, sentence2)	
-		# return construct_input_no_token(sentence1,sentence2)
-
-def construct_input_roberta(sentence1, sentence2):
+		return construct_input_roberta(sentence1,sentence2)
+	
+def construct_input_no_token(sentence1, sentence2):
 	return sentence1+'. '+sentence2
 
 def construct_input_deberta(sentence1, sentence2):
 	return '[CLS] '+ sentence1+' [SEP] ' + sentence2 + ' [SEP]'
 
-def construct_input_no_token(sentence1, sentence2):
+def construct_input_roberta(sentence1, sentence2):
 	return '<s>' +  sentence1 + '</s></s> ' + sentence2 + '</s>'
 
 
@@ -51,19 +47,8 @@ def run_pipe(model_name,pipe, sentence1, sentence2):
 	predicts = []
 	for i,sent in enumerate(sentence1):
 		input_pair = construct_input(model_name,sent,sentence2[i])
-		# print(sent)
-		# print(sentence2[i])
-		# print(input_pair)
 		res = pipe(input_pair)
 		predict_label = res[0]['label'].lower()
-		# print(predict_label)
-		#textattack version
-		# if predict_label == 'label_0':
-		# 	predict_label = 'contradiction'
-		# elif predict_label == 'label_1':
-		# 	predict_label = 'neutral'
-		# elif predict_label == 'label_2':
-		# 	predict_label = 'entailment'
 		#base version
 		if predict_label == 'label_0':
 			predict_label = 'entailment'
@@ -104,14 +89,9 @@ def evaluate(predicts, labels):
 
 	target_names = ['contradiction', "entailment", 'neutral']
 	cm = confusion_matrix(labels, predicts, normalize = "true", labels = target_names)
-	# cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 	disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels = target_names).plot(cmap = 'Blues', colorbar="false")
-	# make_confusion_matrix(cm, 
-        #               categories=target_names, 
-        #               cmap='binary')
 	plt.savefig('nan')
 	print(cm)
-	# print(cm.diagonal())
 
 
 def highlight_difference(row):
@@ -121,26 +101,8 @@ def highlight_difference(row):
     background = ['background-color: {}'.format(color) for _ in row]
     return background
 
-
-# def infer(sentence1, sentence2):
-# 	predicts = []
-# 	for i,sent in enumerate(sentence1):
-# 		input_pair = construct_input_deberta(sent,sentence2[i])
-# 		res = pipe(input_pair)
-# 		predict_label = res[0]['label'].lower()
-# 		if predict_label == 'label_0':
-# 			predict_label = 'entailment'
-# 		elif predict_label == 'label_1':
-# 			predict_label = 'neutral'
-# 		elif predict_label == 'label_2':
-# 			predict_label = 'contradiction'
-# 		predicts.append(predict_label)
-# 	return predicts
-
-
 def main(argv):
 	inputfile = ''
-	outputfile = ''
 	model_name = ''
 	try:
 		opts, args = getopt.getopt(argv,"hi:o:m:",["ifile=","ofile="])
@@ -173,7 +135,7 @@ def main(argv):
 	model_name = model_name.replace('/','-')
 	output_file = inputfile+'-pred-'+model_name+'.csv'
 	df_out.to_csv(output_file, index = None)
-
+	print('Writing result to', output_file)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
